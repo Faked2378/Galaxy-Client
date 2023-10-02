@@ -1,6 +1,7 @@
 import os
 import json
 import shutil
+import requests
 
 # Define the Minecraft profile and mods directory paths using %APPDATA%
 appdata_dir = os.environ['APPDATA']
@@ -9,6 +10,7 @@ profile_name = "CreateNations 1.20.1"
 profile_dir = os.path.join(minecraft_dir, profile_name)
 mods_dir = os.path.join(profile_dir, "Mods")
 profiles_json_path = os.path.join(profile_dir, "launcher_profiles.json")
+github_mods_folder_url = "https://github.com/Faked2378/CreateNations/tree/main/mods/"
 
 # Create a new profile in the launcher_profiles.json file
 def create_new_profile(profiles_json_path, new_profile_name):
@@ -38,7 +40,7 @@ def create_new_profile(profiles_json_path, new_profile_name):
     with open(profiles_json_path, "w") as profiles_file:
         json.dump(profiles_data, profiles_file, indent=4)
 
-# Create a directory for the new profile and copy mods
+# Download the contents of the GitHub folder and copy them to the "Mods" directory
 def setup_profile(new_profile_name):
     if not os.path.exists(profile_dir):
         os.makedirs(profile_dir)
@@ -47,11 +49,24 @@ def setup_profile(new_profile_name):
     if not os.path.exists(mods_dir):
         os.makedirs(mods_dir)
 
-    # Copy your mods to the new profile's "Mods" directory
-    # You should place your mod files in a directory, e.g., "CreateNationsMods", and copy them here
-    mod_source_dir = os.path.join(appdata_dir, "CreateNationsMods")
-    if os.path.exists(mod_source_dir):
-        shutil.copytree(mod_source_dir, mods_dir)
+    # Download the contents of the GitHub folder and copy them to "Mods"
+    response = requests.get(github_mods_folder_url)
+    if response.status_code == 200:
+        # Parse the HTML response to extract file/folder links
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(response.text, 'html.parser')
+        links = soup.find_all('a', href=True)
+
+        # Filter and download the contents of the folder
+        for link in links:
+            href = link.get('href')
+            if href.startswith('/Faked2378/CreateNations/tree/main/mods/'):
+                file_name = os.path.basename(href.rstrip('/'))
+                download_url = f'https://raw.githubusercontent.com{href}/'
+                response = requests.get(download_url)
+                if response.status_code == 200:
+                    with open(os.path.join(mods_dir, file_name), 'wb') as file:
+                        file.write(response.content)
 
 # Main script execution
 create_new_profile(profiles_json_path, profile_name)
