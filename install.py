@@ -6,8 +6,8 @@ import shutil
 minecraft_dir = "C:\\Users\\marek\\Desktop\\test"
 profile_name = "CreateNations 1.20"
 profile_dir = os.path.join(minecraft_dir, profile_name)
+mods_dir = os.path.join(profile_dir, "Mods")
 profiles_json_path = os.path.join(profile_dir, "launcher_profiles.json")
-mods_dir = os.path.join(minecraft_dir, "mods")
 
 # Create a new profile in the launcher_profiles.json file
 def create_new_profile(profiles_json_path, new_profile_name):
@@ -28,8 +28,8 @@ def create_new_profile(profiles_json_path, new_profile_name):
 
     profiles_data["profiles"][new_profile_name] = {
         "name": new_profile_name,
-        "gameDir": os.path.join(minecraft_dir, new_profile_name),
-        "lastVersionId": "1.20",
+        "gameDir": profile_dir,
+        "lastVersionId": "<your_minecraft_version>",
         "javaArgs": "-Xmx2G -Xms1G",
         # Add other necessary configuration options here
     }
@@ -42,11 +42,15 @@ def setup_profile(new_profile_name):
     if not os.path.exists(profile_dir):
         os.makedirs(profile_dir)
 
-    # Copy your mods to the new profile's mods directory
+    # Create a "Mods" directory inside the profile folder
+    if not os.path.exists(mods_dir):
+        os.makedirs(mods_dir)
+
+    # Copy your mods to the new profile's "Mods" directory
     # You should place your mod files in a directory, e.g., "CreateNationsMods", and copy them here
     mod_source_dir = os.path.join(minecraft_dir, "CreateNationsMods")
     if os.path.exists(mod_source_dir):
-        shutil.copytree(mod_source_dir, os.path.join(profile_dir, "mods"))
+        shutil.copytree(mod_source_dir, mods_dir)
 
 # Main script execution
 create_new_profile(profiles_json_path, profile_name)
