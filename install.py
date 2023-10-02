@@ -10,7 +10,7 @@ profile_name = "CreateNations 1.20.1"
 profile_dir = os.path.join(minecraft_dir, profile_name)
 mods_dir = os.path.join(profile_dir, "Mods")
 profiles_json_path = os.path.join(profile_dir, "launcher_profiles.json")
-github_mods_folder_url = "https://github.com/Faked2378/CreateNations/tree/main/mods/"
+github_api_url = "https://api.github.com/repos/Faked2378/CreateNations/contents/mods"
 
 # Create a new profile in the launcher_profiles.json file
 def create_new_profile(profiles_json_path, new_profile_name):
@@ -49,20 +49,14 @@ def setup_profile(new_profile_name):
     if not os.path.exists(mods_dir):
         os.makedirs(mods_dir)
 
-    # Download the contents of the GitHub folder and copy them to "Mods"
-    response = requests.get(github_mods_folder_url)
+    # Fetch the contents of the GitHub folder using the GitHub API
+    response = requests.get(github_api_url)
     if response.status_code == 200:
-        # Parse the HTML response to extract file/folder links
-        from bs4 import BeautifulSoup
-        soup = BeautifulSoup(response.text, 'html.parser')
-        links = soup.find_all('a', href=True)
-
-        # Filter and download the contents of the folder
-        for link in links:
-            href = link.get('href')
-            if href.startswith('/Faked2378/CreateNations/tree/main/mods/'):
-                file_name = os.path.basename(href.rstrip('/'))
-                download_url = f'https://raw.githubusercontent.com{href}/'
+        contents = response.json()
+        for item in contents:
+            if item["type"] == "file":
+                file_name = os.path.basename(item["name"])
+                download_url = item["download_url"]
                 response = requests.get(download_url)
                 if response.status_code == 200:
                     with open(os.path.join(mods_dir, file_name), 'wb') as file:
