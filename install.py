@@ -8,7 +8,7 @@ import urllib.request
 
 # Define the Minecraft profile and mods directory paths using %APPDATA%
 appdata_dir = os.environ['APPDATA']
-minecraft_dir = os.path.join(appdata_dir, ".test")
+minecraft_dir = os.path.join(appdata_dir, ".minecraft")
 profile_name = "CreateNations 1.20.1"
 profile_dir = os.path.join(minecraft_dir, profile_name)
 mods_dir = os.path.join(profile_dir, "Mods")
@@ -53,6 +53,7 @@ def download_and_copy_file(file_info):
         os.remove(destination_path)
 
     urllib.request.urlretrieve(download_url, destination_path)
+    print(f"Installed: {file_name}")
 
 # Download and copy the contents of the GitHub folder using multiple threads
 def setup_profile(new_profile_name):
@@ -73,7 +74,10 @@ def setup_profile(new_profile_name):
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             executor.map(download_and_copy_file, files_to_copy)
 
+    print("Installation completed.")
+
 # Main script execution
 if __name__ == "__main__":
+    print(f"Starting installation of {profile_name}...")
     create_new_profile(profiles_json_path, profile_name)
     setup_profile(profile_name)
