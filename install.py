@@ -77,6 +77,24 @@ def setup_profile(new_profile_name):
             if os.path.isfile(source_item):
                 shutil.copy2(source_item, dest_item)
 
+    # Download and add mods from the GitHub repository
+    github_repo_url = "https://api.github.com/repos/Faked2378/CreateNations/contents/mods"
+    response = requests.get(github_repo_url)
+    if response.status_code == 200:
+        github_contents = response.json()
+        for item in github_contents:
+            if item["type"] == "file" and item["name"].endswith(".jar"):
+                mod_url = item["download_url"]
+                mod_filename = os.path.join(mods_dir, item["name"])
+                response = requests.get(mod_url)
+                if response.status_code == 200:
+                    with open(mod_filename, 'wb') as mod_file:
+                        mod_file.write(response.content)
+                else:
+                    print(f"Failed to download {item['name']} from GitHub.")
+    else:
+        print("Failed to fetch GitHub repository contents.")
+
 def create_forge_version():
     forge_version_dir = os.path.join(minecraft_dir, "versions", "CreateNationsForge")
     if not os.path.exists(forge_version_dir):
@@ -199,7 +217,7 @@ def create_forge_version():
         json.dump(forge_version_content, forge_version_json, indent=4)
 
 # Create the custom .jar file
-# create_custom_jar(new_version_jar_path)  # Comment out this line
+create_custom_jar(new_version_jar_path)  # Comment out this line
 
 # Create a new profile in the launcher_profiles.json file
 create_new_profile(profiles_json_path, profile_name)
