@@ -2,6 +2,9 @@ import os
 import json
 import shutil
 import requests
+import concurrent.futures
+import threading
+import urllib.request
 
 # Define the Minecraft profile and mods directory paths using %APPDATA%
 appdata_dir = os.environ['APPDATA']
@@ -40,7 +43,18 @@ def create_new_profile(profiles_json_path, new_profile_name):
     with open(profiles_json_path, "w") as profiles_file:
         json.dump(profiles_data, profiles_file, indent=4)
 
-# Download the contents of the GitHub folder and copy them to the "Mods" directory
+# Download and copy a single file
+def download_and_copy_file(file_info):
+    file_name, download_url = file_info
+    destination_path = os.path.join(mods_dir, file_name)
+
+    # Check if the file already exists
+    if os.path.exists(destination_path):
+        os.remove(destination_path)
+
+    urllib.request.urlretrieve(download_url, destination_path)
+
+# Download and copy the contents of the GitHub folder using multiple threads
 def setup_profile(new_profile_name):
     if not os.path.exists(profile_dir):
         os.makedirs(profile_dir)
@@ -53,15 +67,13 @@ def setup_profile(new_profile_name):
     response = requests.get(github_api_url)
     if response.status_code == 200:
         contents = response.json()
-        for item in contents:
-            if item["type"] == "file":
-                file_name = os.path.basename(item["name"])
-                download_url = item["download_url"]
-                response = requests.get(download_url)
-                if response.status_code == 200:
-                    with open(os.path.join(mods_dir, file_name), 'wb') as file:
-                        file.write(response.content)
+        files_to_copy = [(os.path.basename(item["name"]), item["download_url"]) for item in contents if item["type"] == "file"]
+
+        # Use a ThreadPoolExecutor to parallelize the file downloads
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            executor.map(download_and_copy_file, files_to_copy)
 
 # Main script execution
-create_new_profile(profiles_json_path, profile_name)
-setup_profile(profile_name)
+if __name__ == "__main__":
+    create_new_profile(profiles_json_path, profile_name)
+    setup_profile(profile_name)
