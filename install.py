@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import requests
 import subprocess
@@ -11,21 +12,11 @@ profile_name = "CreateNations 1.20.1"
 profile_dir = os.path.join(minecraft_dir, profile_name)
 mods_dir = os.path.join(profile_dir, "mods")
 profiles_json_path = os.path.join(minecraft_dir, "launcher_profiles.json")
+saves = os.path.join(profile_dir, "saves")
+rp = os.path.join(profile_dir, "resourcepacks")
 new_profiles_json_path = os.path.join(minecraft_dir, "CreateNations1201.json")
 new_version_dir = os.path.join(minecraft_dir, "versions", "CreateNations")
 new_version_jar_path = os.path.join(new_version_dir, "CreateNations1201.jar")
-
-# Function to create a custom .jar file
-def create_custom_jar(new_version_jar_path):
-    # Ensure that the required directories exist
-    os.makedirs(os.path.dirname(new_version_jar_path), exist_ok=True)
-
-    with zipfile.ZipFile(new_version_jar_path, 'w', zipfile.ZIP_DEFLATED) as custom_jar:
-        # Add your mod jar files to the custom .jar
-        for item in os.listdir(mods_dir):
-            item_path = os.path.join(mods_dir, item)
-            if os.path.isfile(item_path) and item.endswith(".jar"):
-                custom_jar.write(item_path, os.path.basename(item_path))
 
 # Create a new profile in the launcher_profiles.json file
 def create_new_profile(profiles_json_path, new_profile_name):
@@ -56,6 +47,12 @@ def create_new_profile(profiles_json_path, new_profile_name):
 
     with open(profiles_json_path, "w") as profiles_file:
         json.dump(profiles_data, profiles_file, indent=4)
+
+def AddNeccassaryFolders():
+    if not os.path.exists(saves):
+        os.makedirs(saves)
+    if not os.path.exists(rp):
+        os.makedirs(rp)
 
 # Create the Mods folder and copy mod jars
 def setup_profile(new_profile_name):
@@ -215,8 +212,6 @@ def create_forge_version():
     with open(forge_version_file, "w") as forge_version_json:
         json.dump(forge_version_content, forge_version_json, indent=4)
 
-# Create the custom .jar file
-create_custom_jar(new_version_jar_path)  # Comment out this line
 
 # Create a new profile in the launcher_profiles.json file
 create_new_profile(profiles_json_path, profile_name)
@@ -226,5 +221,7 @@ setup_profile(profile_name)
 
 # Create the Forge version JSON file
 create_forge_version()
+
+
 
 print("Forge version and profile setup completed!")
