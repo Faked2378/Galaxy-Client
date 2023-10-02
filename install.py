@@ -1,27 +1,15 @@
 import os
 import json
-import shutil
-import requests
-import subprocess
-import zipfile
 
-# Define the Minecraft profile and mods directory paths
+# Define the Minecraft profile directory path
 appdata_dir = os.environ['APPDATA']
 minecraft_dir = os.path.join(appdata_dir, ".minecraft")
 profile_name = "CreateNations 1.20.1"
 profile_dir = os.path.join(minecraft_dir, profile_name)
-mods_dir = os.path.join(profile_dir, "mods")
 profiles_json_path = os.path.join(minecraft_dir, "launcher_profiles.json")
-new_profiles_json_path = os.path.join(minecraft_dir, "CreateNations1201.json")
-new_version_dir = os.path.join(minecraft_dir, "versions", "CreateNations")
-new_version_jar_path = os.path.join(new_version_dir, "CreateNations1201.jar")
+forge_version_dir = os.path.join(minecraft_dir, "versions", "CreateNationsForge")
 
-# Function to create a custom .jar file
-def create_custom_jar(new_version_jar_path):
-    # Create an empty .jar file (You can customize this part)
-    subprocess.run(["jar", "cf", new_version_jar_path])
-
-# Create a new profile in the launcher_profiles.json file
+# Function to create a new profile in the launcher_profiles.json file
 def create_new_profile(profiles_json_path, new_profile_name):
     if not os.path.exists(profile_dir):
         os.makedirs(profile_dir)
@@ -44,42 +32,70 @@ def create_new_profile(profiles_json_path, new_profile_name):
         "lastVersionId": "1.20.1",
         "javaArgs": "-Xmx2G -Xms1G",
         "type": "custom",
-        "custom": new_version_jar_path,  # Set the custom .jar file path
         # Add other necessary configuration options here
     }
 
     with open(profiles_json_path, "w") as profiles_file:
         json.dump(profiles_data, profiles_file, indent=4)
 
-def create_custom_jar(new_version_jar_path):
-    with zipfile.ZipFile(new_version_jar_path, 'w', zipfile.ZIP_DEFLATED) as custom_jar:
-        # Add your mod jar files to the custom .jar
-        for item in os.listdir(mods_dir):
-            item_path = os.path.join(mods_dir, item)
-            if os.path.isfile(item_path) and item.endswith(".jar"):
-                custom_jar.write(item_path, os.path.basename(item_path))
+def create_forge_version():
+    if not os.path.exists(forge_version_dir):
+        os.makedirs(forge_version_dir)
 
-# Create the Mods folder and copy mod jars
-def setup_profile(new_profile_name):
-    if not os.path.exists(profile_dir):
-        os.makedirs(profile_dir)
+    # Create the '1.20.1-forge-47.2.1.json' file with the specified content
+    forge_version_file = os.path.join(forge_version_dir, "1.20.1-forge-47.2.1.json")
+    forge_version_content = {
+        "id": "1.20.1-forge-47.2.1",
+        "time": "2023-09-28T07:27:32+00:00",
+        "releaseTime": "2023-09-28T07:27:32+00:00",
+        "type": "release",
+        "mainClass": "cpw.mods.bootstraplauncher.BootstrapLauncher",
+        "inheritsFrom": "1.20.1",
+        "logging": {},
+        "arguments": {
+            "game": [
+                "--launchTarget",
+                "forgeclient",
+                "--fml.forgeVersion",
+                "47.2.1",
+                "--fml.mcVersion",
+                "1.20.1",
+                "--fml.forgeGroup",
+                "net.minecraftforge",
+                "--fml.mcpVersion",
+                "20230612.114412"
+            ],
+            "jvm": [
+                "-Djava.net.preferIPv6Addresses=system",
+                "-DignoreList=bootstraplauncher,securejarhandler,asm-commons,asm-util,asm-analysis,asm-tree,asm,JarJarFileSystems,client-extra,fmlcore,javafmllanguage,lowcodelanguage,mclanguage,forge-,${version_name}.jar",
+                "-DmergeModules=jna-5.10.0.jar,jna-platform-5.10.0.jar",
+                "-DlibraryDirectory=${library_directory}",
+                # Add JVM options and libraries as needed
+            ]
+        },
+        "libraries": [
+            {
+                "name": "cpw.mods:securejarhandler:2.1.10",
+                "downloads": {
+                    "artifact": {
+                        "path": "cpw/mods/securejarhandler/2.1.10/securejarhandler-2.1.10.jar",
+                        "url": "https://maven.minecraftforge.net/cpw/mods/securejarhandler/2.1.10/securejarhandler-2.1.10.jar",
+                        "sha1": "51e6a22c6c716beb11e244bf5b8be480f51dd6b5",
+                        "size": 88749
+                    }
+                }
+            },
+            # Add other required libraries here
+        ]
+    }
 
-    # Create a "mods" directory inside the profile folder
-    if not os.path.exists(mods_dir):
-        os.makedirs(mods_dir)
+    with open(forge_version_file, "w") as forge_version_json:
+        json.dump(forge_version_content, forge_version_json, indent=4)
 
-    # Copy your mod jars to the new profile's "mods" directory
-    # Place your mod jar files in a directory, e.g., "CreateNationsMods", and copy them here
-    mod_source_dir = os.path.join(appdata_dir, "CreateNationsMods")
-    if os.path.exists(mod_source_dir):
-        for item in os.listdir(mod_source_dir):
-            source_item = os.path.join(mod_source_dir, item)
-            dest_item = os.path.join(mods_dir, item)
-            if os.path.isfile(source_item):
-                shutil.copy2(source_item, dest_item)
+# Create a new profile in the launcher_profiles.json file
+create_new_profile(profiles_json_path, profile_name)
 
-if __name__ == "__main__":
-    # Ensure that the custom .jar file is created before attempting to copy it
-    create_custom_jar(new_version_jar_path)
-    create_new_profile(profiles_json_path, profile_name)
-    setup_profile(profile_name)
+# Create the Forge version JSON file
+create_forge_version()
+
+print("Forge version and profile setup completed!")
