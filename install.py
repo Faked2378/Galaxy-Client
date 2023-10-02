@@ -8,7 +8,7 @@ import urllib.request
 
 # Define the Minecraft profile and mods directory paths using %APPDATA%
 appdata_dir = os.environ['APPDATA']
-minecraft_dir = os.path.join(appdata_dir, ".minecraft")
+minecraft_dir = os.path.join(appdata_dir, ".test")
 profile_name = "CreateNations 1.20.1"
 profile_dir = os.path.join(minecraft_dir, profile_name)
 mods_dir = os.path.join(profile_dir, "Mods")
